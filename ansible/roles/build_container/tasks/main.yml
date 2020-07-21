@@ -1,13 +1,17 @@
 ---
-- name:                 Download artifact from Nexus
-  maven_artifact:
-    repository_url:     "{{ repository_url }}"
-    group_id:           "{{ group_id }}"
-    artifact_id:        "{{ artifact_id }}"
-    version:            "{{ artifact_version }}"
-    extension:          "{{ artifact_extension }}"
-    dest:               "{{ artifact_dest }}"
+- name: Build an image and push it to a private repo
+  docker_image:
+    build:
+      path: ./docker
+    name: 10.0.1.11:5000/docker_spring
+    tag: v1
+    push: yes
+    source: build
+    
+- name: Running the container
+  docker_container:
+    image: docker_spring:latest
+    path: docker
+    state: running
 
-- name:                 Run downloaded artifact on CI environment
-  shell:
-    nohup java -jar "{{ artifact_dest }}" --server.port=8888 &
+

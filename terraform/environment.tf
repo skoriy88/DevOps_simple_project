@@ -146,7 +146,7 @@ resource "aws_security_group" "destination_sg" {
 
 
   dynamic "ingress" {
-    for_each = ["22", "9999"]
+    for_each = ["22", "8888", "9999"]
     content {
       from_port   = ingress.value
       to_port     = ingress.value

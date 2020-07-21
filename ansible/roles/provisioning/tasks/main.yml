@@ -64,6 +64,15 @@
   debug:
     msg: "Container Output: {{hello_world_output.stdout}}"
 
+- name: Install pip
+  apt: 
+    name: python-pip 
+    state: present
+      
+- name: install docker-py
+  pip: 
+    name: docker-py
+
 # Installing java
 - name: Update repository
   apt:
