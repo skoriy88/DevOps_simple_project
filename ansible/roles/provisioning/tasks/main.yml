@@ -1,0 +1,105 @@
+---
+# Creating remote user
+- name: Create new user group
+  group:
+    name: ansible
+    state: present
+
+- name: Add new user
+  user:
+    name: ansible
+    password: ansible
+    comment: New User created by ansible playbook
+    groups: sudo, vagrant, ansible
+
+
+# Installing Docker
+- name: Install aptitude with apt
+  apt:
+    name: aptitude
+    state: latest
+    update_cache: yes
+    force_apt_get: yes
+
+- name: Install required system packages
+  apt:
+    name: "{{ DOCKER_PACKAGES }}"
+    state: latest
+    update_cache: yes
+
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Save the current Ubuntu release version into a variable
+  shell: lsb_release -cs
+  register: ubuntu_version
+
+- name: Print ubuntu version
+  debug:
+    msg: "Ubuntu version is '{{ ubuntu_version }}'"
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: "deb https://download.docker.com/linux/ubuntu bionic stable"
+    state: present
+
+- name: Update apt and install docker.io
+  apt:
+    name: docker.io
+    state: latest
+
+- name: Run docker daemon
+  shell: systemctl start docker
+
+- name: Enable docker daemon on startup
+  shell: systemctl enable docker
+
+- name: Test Docker with hello world example
+  shell: "docker run hello-world"
+  register: hello_world_output
+
+- name: Show output of hello word example
+  debug:
+    msg: "Container Output: {{hello_world_output.stdout}}"
+
+# Installing java
+- name: Update repository
+  apt:
+    update_cache: yes
+
+- name: Installing java
+  apt:
+    name: "{{ JAVA_PACKAGES }}"
+    state: present
+
+# Installing python libraries
+- name: Install python-lxml module
+  apt:
+    name: python-lxml
+    state: present
+
+- name: Install python-lxml module
+  apt:
+    name: python3-lxml
+    state: present
+
+# Creating working dir
+- name: Create a directory if it does not exist
+  file:
+    path: /opt/test_web_app
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: '0755'
+
+# Installing Maven
+# name: Update repository
+#  apt:
+#    update_cache: yes
+#
+#- name: Installing Maven
+#  apt:
+#    name: maven
+#    state: present

@@ -1,0 +1,10 @@
+# Maven Repo Info
+repository_url:     http://192.168.10.2:8081/repository/test_repo/
+
+# Artifact Info
+group_id:           "skoriy88"
+artifact_id:        "example.smallest"
+artifact_version:   "latest"
+artifact_extension: "war"
+artifact_filename:  "${artifact_filename}"
+artifact_dest:      /opt/test_web_app/deployed_app.war
