@@ -1,5 +1,5 @@
 # Maven Repo Info
-repository_url:     http://192.168.10.2:8081/repository/test_repo/
+repository_url:     http://10.0.1.11:8081/repository/maven_repo/
 
 # Artifact Info
 group_id:           "skoriy88"
