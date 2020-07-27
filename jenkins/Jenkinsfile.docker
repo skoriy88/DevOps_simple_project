@@ -1,4 +1,4 @@
-// needed to install the pipeline-utility-steps plugin.
+// properties([pipelineTriggers([githubPush()])])
 pipeline {
     agent {
         label "master"
@@ -28,23 +28,18 @@ pipeline {
             steps {
               checkout([
                 $class: 'GitSCM', 
-                branches: [[name: '*/2.1.x']], 
+                branches: [[name: '*/master']], 
                 doGenerateSubmoduleConfigurations: false, 
                 extensions: [], 
                 submoduleCfg: [], 
-                userRemoteConfigs: [[credentialsId: 'github_skoriy88', url: 'https://github.com/skoriy88/spring-boot.git']]
+                userRemoteConfigs: [[credentialsId: 'github_skoriy88', url: 'https://github.com/skoriy88/simple-springboot-app.git']]
               ])
-
-                // script {
-                //     git 'https://github.com/skoriy88/simple-springboot-app.git';
-                // }
             }
         }
         stage("BUILD with Maven3") {
             steps {
-                script {
-                    sh "mvn -DskipTests clean install"
-                }
+                // sh 'mvn clean install'
+                sh 'mvn package -DskipTests=true'
             }
         }
         stage("UPLOAD ARTIFACT to Nexus Repository Manager") {
@@ -100,13 +95,17 @@ pipeline {
             }
           }
         }
-        stage("Start deployed app on CI") {
+        stage("Creating docker image using Ansible role") {
           steps {
+            sh "whoami"
+            sh "pwd"
+            sh "echo 'build_number: ${BUILD_NUMBER}' > /opt/ansible_playbooks/docker/vars.yml"
+            
             script {
-              echo "Testihg combined role"
-              //ansiblePlaybook become: true, credentialsId: 'ansible_credentials',  disableHostKeyChecking: true, installation: 'ansible', inventory: '/opt/ansible_playbooks/hosts', playbook: '/opt/ansible_playbooks/run_artifact.yml'
+                ansiblePlaybook become: true, credentialsId: 'ansible_credentials',  disableHostKeyChecking: true, installation: 'ansible', inventory: '/opt/ansible_playbooks/hosts', playbook: '/opt/ansible_playbooks/build_container.yml'
+
             }
           }
         }
     }
-}
+}     

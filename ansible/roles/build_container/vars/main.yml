@@ -1,10 +1,6 @@
-# Maven Repo Info
-repository_url:     http://10.0.1.11:8081/repository/maven_repo/
+---
+working_dir:      /opt/test_web_app
 
-# Artifact Info
-group_id:           "skoriy88"
-artifact_id:        "example.smallest"
-artifact_version:   "latest"
-artifact_extension: "war"
-artifact_filename:  "${artifact_filename}"
-artifact_dest:      /opt/test_web_app/deployed_app.war
+registry_address: 10.0.1.11:5000 
+registry_username: docker
+registry_password: docker123

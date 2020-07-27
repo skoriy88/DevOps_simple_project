@@ -1,6 +1,4 @@
 provider "aws" {
-  access_key = "AKIAVH6HC4RR5ER47H7N"
-  secret_key = "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"
   region     = "eu-central-1"
 }
 
@@ -168,7 +166,7 @@ resource "aws_security_group" "destination_sg" {
 }
 
 # ICMP SG
-resource "aws_security_group" "destination_sg" {
+resource "aws_security_group" "icmp_sg" {
   name        = "icmp_sg"
   description = "icmp_sg"
   vpc_id      = aws_vpc.gw_vpc.id
@@ -197,7 +195,7 @@ resource "aws_security_group" "destination_sg" {
 # DevTools server
 resource "aws_instance" "DevTools" {
   ami                    = "ami-0e342d72b12109f91"
-  instance_type          = "t2.micro"
+  instance_type          = "t2.large"
   key_name               = "aws_frankfurt_key"
   vpc_security_group_ids = [aws_security_group.devtools_sg.id, aws_security_group.icmp_sg.id]
   subnet_id = aws_subnet.gw_public_subnet.id

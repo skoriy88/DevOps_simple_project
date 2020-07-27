@@ -8,12 +8,6 @@
     extension:          "{{ artifact_extension }}"
     dest:               "{{ artifact_dest }}"
 
-- name: Pull 8-jdk-alpine image
-  docker_image:
-    name: 8-jdk-alpine
-    source: pull
-
-
 - name:                 Run downloaded artifact on CI environment
   shell:
     nohup java -jar "{{ artifact_dest }}" --server.port=8888 &
