@@ -195,20 +195,18 @@ resource "aws_security_group" "icmp_sg" {
 # DevTools server
 resource "aws_instance" "DevTools" {
   ami                    = "ami-0e342d72b12109f91"
-  instance_type          = "t2.large"
+  instance_type          = "t2.medium"
   key_name               = "aws_frankfurt_key"
   vpc_security_group_ids = [aws_security_group.devtools_sg.id, aws_security_group.icmp_sg.id]
   subnet_id = aws_subnet.gw_public_subnet.id
   private_ip = "10.0.1.10"
-
   tags = {
     Name = "DevTools"
   }
   #save instance_ip
   provisioner "local-exec" {
-    command = "echo DevTools ${aws_instance.DevTools.public_ip} > ../public_ips.txt"
+    command = "echo DevTools ${aws_instance.DevTools.public_ip} >> ../public_ips.txt"
   }
-
   provisioner "remote-exec" {
     inline = [
       "echo --------------INSTALLING JAVA-------------",
@@ -223,10 +221,6 @@ resource "aws_instance" "DevTools" {
       "sudo systemctl start docker",
       "sudo systemctl enable docker",
       "sudo usermod -aG docker $USER",
-      # "echo --------------INSTALLING DOCKER-REGISTRY-------------",
-      # "sudo curl -L 'https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)' -o /usr/local/bin/docker-compose",
-      # "sudo chmod +x /usr/local/bin/docker-compose",
-      # "docker run -d -p 5000:5000 --restart=always --name registry registry:2",
       "echo --------------INSTALLING JENKINS-------------",
       "sudo apt-get update",
       "sudo apt-get install --yes daemon",
@@ -245,20 +239,19 @@ resource "aws_instance" "DevTools" {
       "sudo apt-add-repository --yes ppa:ansible/ansible",
       "sudo apt-get update",
       "sudo apt-get install --yes ansible",
-      # "echo --------------INSTALLING NEXUS-------------",
-      # "cd ~",
-      # "wget https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.24.0-02-unix.tar.gz",
-      # "tar -С /opt -zxvf  nexus-3.24.0-02-unix.tar.gz",
-      # "mv /opt/nexus-3.24.0-02 /opt/nexus",
-      # "mv opt/nexus/bin/nexus.rc /opt/nexus/bin/nexus.rc.old",
-      # "sudo chown -R ubuntu:ubuntu nexus/ sonatype-work/",
-      # "echo NEXUS_HOME='/opt/nexus' >> ~/.bashrc",
-      # "source ~/.bashrc",
-      # "echo run_as_user='ubuntu' > /opt/nexus/bin/nexus.rc",
-      # "sudo ln -s /opt/nexus/bin/nexus /etc/init.d/nexus",
-      # "sudo systemctl start nexus",
+      "sudo mkdir /opt/ansible_playbooks",
+      "sudo chown -R ubuntu:ubuntu /opt/ansible_playbooks"
     ]
-
+    connection {
+      user        = "ubuntu"
+      type        = "ssh"
+      private_key = file("../aws/aws_frankfurt_key.pem")
+      host = aws_instance.DevTools.public_ip
+    }
+  }
+  provisioner "file" {
+    source      = "../ansible/"
+    destination = "/opt/ansible_playbooks"
     connection {
       user        = "ubuntu"
       type        = "ssh"
@@ -283,7 +276,6 @@ resource "aws_instance" "Nexus" {
   provisioner "local-exec" {
     command = "echo Nexus ${aws_instance.Nexus.public_ip} >> ../public_ips.txt"
   }
-
   provisioner "remote-exec" {
     inline = [
       "echo --------------INSTALLING JAVA-------------",
@@ -308,7 +300,6 @@ resource "aws_instance" "Nexus" {
       "sudo systemctl enable nexus",
       "sudo systemctl start nexus",
     ]
-
     connection {
       user        = "ubuntu"
       type        = "ssh"
@@ -318,7 +309,6 @@ resource "aws_instance" "Nexus" {
   }
 }
 
-
 # QA server
 resource "aws_instance" "QA" {
   ami                    = "ami-0e342d72b12109f91"
@@ -326,33 +316,13 @@ resource "aws_instance" "QA" {
   key_name               = "aws_frankfurt_key"
   vpc_security_group_ids = [aws_security_group.destination_sg.id, aws_security_group.icmp_sg.id]
   subnet_id = aws_subnet.gw_public_subnet.id
-  private_ip = "10.0.1.20"
+  private_ip = "10.0.1.30"
   tags = {
     Name = "QA"
   }
   #get instance_ip
   provisioner "local-exec" {
     command = "echo QA ${aws_instance.QA.public_ip} >> ../public_ips.txt"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo --------------INSTALLING JAVA-------------",
-      "sudo apt-get update",
-      "sudo apt-get install --yes openjdk-8-jre",
-      "sudo apt-get install --yes openjdk-8-jdk",
-      "java -version",
-      "echo --------------INSTALLING Python3-------------",
-      "sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1",
-      "sudo apt-get install --yes python-lxml",
-    ]
-
-    connection {
-      user        = "ubuntu"
-      type        = "ssh"
-      private_key = file("../aws/aws_frankfurt_key.pem")
-      host = aws_instance.QA.public_ip
-    }
   }
 }
 
@@ -363,33 +333,13 @@ resource "aws_instance" "CI" {
   key_name               = "aws_frankfurt_key"
   vpc_security_group_ids = [aws_security_group.destination_sg.id, aws_security_group.icmp_sg.id]
   subnet_id = aws_subnet.gw_public_subnet.id
-  private_ip = "10.0.1.30"
+  private_ip = "10.0.1.20"
   tags = {
     Name = "CI"
   }
   #get instance_ip
   provisioner "local-exec" {
     command = "echo CI ${aws_instance.CI.public_ip} >> ../public_ips.txt"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo --------------INSTALLING JAVA-------------",
-      "sudo apt-get update",
-      "sudo apt-get install --yes openjdk-8-jre",
-      "sudo apt-get install --yes openjdk-8-jdk",
-      "java -version",
-      "echo --------------INSTALLING Python3-------------",
-      "sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1",
-      "sudo apt-get install --yes python-lxml",
-    ]
-
-    connection {
-      user        = "ubuntu"
-      type        = "ssh"
-      private_key = file("../aws/aws_frankfurt_key.pem")
-      host = aws_instance.CI.public_ip
-    }
   }
 }
 
@@ -407,31 +357,5 @@ resource "aws_instance" "Docker" {
   #get instance_ip
   provisioner "local-exec" {
     command = "echo Docker ${aws_instance.Docker.public_ip} >> ../public_ips.txt"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo --------------INSTALLING JAVA-------------",
-      "sudo apt-get update",
-      "sudo apt-get install --yes openjdk-8-jre",
-      "sudo apt-get install --yes openjdk-8-jdk",
-      "java -version",
-      "echo --------------INSTALLING Python3-------------",
-      "sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1",
-      "sudo apt-get install --yes python-lxml",
-      "echo --------------INSTALLING DOCKER-------------",
-      "sudo apt-get update",
-      "sudo apt-get remove --yes docker docker-engine docker.io",
-      "sudo apt-get install --yes docker.io",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-    ]
-
-    connection {
-      user        = "ubuntu"
-      type        = "ssh"
-      private_key = file("../aws/aws_frankfurt_key.pem")
-      host = aws_instance.Docker.public_ip
-    }
   }
 }
