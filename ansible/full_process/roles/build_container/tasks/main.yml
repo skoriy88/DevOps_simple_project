@@ -1,0 +1,68 @@
+---
+- name: "Template a file to {{ working_dir }}"
+  template:
+    src: ./templates/Dockerfile.j2
+    dest: "{{ working_dir }}/Dockerfile"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: "Enable insecure registry at /etc/docker/daemon.json"
+  template:
+      src: ./templates/docker_daemon.json.j2
+      dest: /etc/docker/daemon.json
+      owner: ubuntu
+      group: ubuntu
+      mode: '0644'
+  
+- name: "Restarting docker service"
+  service:
+      name: docker
+      state: restarted
+
+# - name: Log into private registry and force re-authorization
+#   docker_login:
+#     registry: "{{ registry_address }}"
+#     username: "{{ registry_username }}"
+#     password: "{{ registry_password }}"
+#     reauthorize: yes
+
+- name: Log into private registry
+  shell:
+    "docker login -u {{ registry_username }} -p {{ registry_password }} {{ registry_address }}"
+
+- name: Build an image and push it to a private repo
+  docker_image:
+    build:
+      path: "{{ working_dir }}"
+      pull: yes
+    name: "{{ registry_address }}/app_image"
+    tag: "{{ pom_artifact_version }}"
+    push: yes
+    source: build
+
+# - name: Get a list of all running containers
+#   docker_host_info:
+#     containers: True
+#   register: docker_info
+
+# - name: Stop all running containers
+#   docker_container:
+#     name: '{{ item.Names[0] | regex_replace("^/", "") }}'
+#     state: stopped
+#   loop: '{{ docker_info.containers }}'
+    
+- name: Stop and del all containers
+  shell: |
+    docker stop $(docker ps -a -q)
+    docker rm $(docker ps -a -q)
+
+- name: Running the container
+  docker_container:
+    image: "{{ registry_address }}/app_image:{{ pom_artifact_version }}"
+    name: app_container
+    state: started
+    ports:
+    - "9999:9999"
+
+

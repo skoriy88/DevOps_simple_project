@@ -1,0 +1,16 @@
+---
+- name:                 Download artifact from Nexus
+  maven_artifact:
+    repository_url:     "{{ repository_url }}"
+    username:           "{{ repository_user }}"
+    password:           "{{ repository_password }}"
+    group_id:           "{{ pom_group_id }}" #"{{ group_id }}"
+    artifact_id:        "{{ pom_artifact_id }}" #"{{ artifact_id }}"
+    version:             "{{ artifact_version }}" #"{{ pom_artifact_version }}"
+    extension:           "{{ artifact_extension }}" #"{{ pom_artifact_extension }}"
+    dest:               "{{ artifact_dest }}"
+
+- name:                 Run downloaded artifact on CI environment
+  shell:
+    nohup java -jar "{{ artifact_dest }}" --server.port=8888 &
+

@@ -1,7 +1,0 @@
----
-- name: Creating user, installing docker & java
-  hosts: all
-  become: yes
-
-  roles:
-    - provisioning

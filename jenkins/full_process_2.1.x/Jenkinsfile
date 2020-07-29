@@ -1,0 +1,129 @@
+// needed to install the pipeline-utility-steps plugin.
+// properties([pipelineTriggers([githubPush()])])
+pipeline {
+    agent {
+        label "master"
+    }
+    tools {
+        maven "maven3"
+    }
+    environment {
+        NEXUS_VERSION = "nexus3"
+        NEXUS_PROTOCOL = "http"
+        NEXUS_URL = "10.0.1.11:8081"
+        NEXUS_REPOSITORY = "spring_boot"
+        NEXUS_CREDENTIAL_ID = "nexus_credentials"
+    }
+    stages {
+        stage("CLEAN workspace") {
+            steps {
+              script {
+                sh "pwd"
+                sh "ls -l"
+                deleteDir()
+                sh "ls -l"
+              }
+            }
+        }
+        stage("CHECKOUT from VCS") {
+            steps {
+              checkout([
+                $class: 'GitSCM', 
+                branches: [[name: '*/2.1.x']], 
+                doGenerateSubmoduleConfigurations: false, 
+                extensions: [], 
+                submoduleCfg: [], 
+                userRemoteConfigs: [[credentialsId: 'github_skoriy88', url: 'https://github.com/skoriy88/spring-boot.git']]
+              ])
+            }
+        }
+        stage("BUILD with Maven3") {
+            steps {
+              sh "mvn -DskipTests clean install"
+            }
+        }
+        stage("UPLOAD ARTIFACT to Nexus Repository Manager") {
+          environment {
+            POM_GROUP = readMavenPom().getGroupId()
+            POM_ARTIF = readMavenPom().getArtifactId()
+            POM_VERSION = readMavenPom().getVersion()
+            POM_PACK = readMavenPom().getPackaging()
+          }
+            steps {
+              sh "echo 'build_number: ${BUILD_NUMBER}' > /opt/ansible_playbooks/full_process_2.1.x/group_vars/build_vars.yml"
+              sh "echo 'pom_group_id: ${POM_GROUP}' >> /opt/ansible_playbooks/full_process_2.1.x/group_vars/build_vars.yml"
+              sh "echo 'pom_artifact_id: ${POM_ARTIF}' >> /opt/ansible_playbooks/full_process_2.1.x/group_vars/build_vars.yml"
+              sh "echo 'pom_artifact_version: ${POM_VERSION}.${BUILD_NUMBER}' >> /opt/ansible_playbooks/full_process_2.1.x/group_vars/build_vars.yml"
+              sh "echo 'pom_artifact_extension: ${POM_PACK}' >> /opt/ansible_playbooks/full_process_2.1.x/group_vars/build_vars.yml"
+                script {
+                    pom = readMavenPom file: "pom.xml";
+                    filesByGlob = findFiles(glob: "./spring-boot-samples/spring-boot-sample-web-ui/target/*.jar");
+                    echo "Find artifact"
+                    echo "${filesByGlob[0].name}, ${filesByGlob[0].path}, ${filesByGlob[0].directory}, ${filesByGlob[0].length}, ${filesByGlob[0].lastModified}"
+                    artifactPath = filesByGlob[0].path;
+                    artifactExists = fileExists artifactPath;
+                    if(artifactExists) {
+                        echo "Start uploading artifact"
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+                        nexusArtifactUploader(
+                            nexusVersion: NEXUS_VERSION,
+                            protocol: NEXUS_PROTOCOL,
+                            nexusUrl: NEXUS_URL,
+                            groupId: pom.groupId,
+                            //version: pom.version,
+                            version: "${pom.version}.${BUILD_NUMBER}",
+                            repository: NEXUS_REPOSITORY,
+                            credentialsId: NEXUS_CREDENTIAL_ID,
+                            artifacts: [
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: artifactPath,
+                                type: pom.packaging],
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: "pom.xml",
+                                type: "pom"]
+                            ]
+                        );
+                    } 
+                    else {
+                      error "*** File: ${artifactPath}, could not be found";
+                    }
+                }
+            }
+        }
+        stage("CI & QA PROVISION using Ansible role") {
+          steps {
+            ansiblePlaybook become: true, 
+            colorized: true, credentialsId: 'ansible_credentials',  
+            disableHostKeyChecking: true, 
+            installation: 'ansible', 
+            inventory: '/opt/ansible_playbooks/full_process_2.1.x/hosts', 
+            playbook: '/opt/ansible_playbooks/full_process_2.1.x/provisioning.yml'
+          }
+        }
+        stage("DEPLOY to CI & QA using Ansible role, start app") {
+          steps {
+            ansiblePlaybook become: true, 
+            extras: '-vvv',
+            colorized: true, 
+            credentialsId: 'ansible_credentials',  
+            disableHostKeyChecking: true, 
+            installation: 'ansible', 
+            inventory: '/opt/ansible_playbooks/full_process_2.1.x/hosts', 
+            playbook: '/opt/ansible_playbooks/full_process_2.1.x/deploy_artifact.yml'
+          }
+        }
+        stage("Creating docker image using Ansible role") {
+          steps {
+            ansiblePlaybook become: true, 
+            colorized: true, 
+            credentialsId: 'ansible_credentials',  
+            disableHostKeyChecking: true, 
+            installation: 'ansible', 
+            inventory: '/opt/ansible_playbooks/full_process_2.1.x/hosts', 
+            playbook: '/opt/ansible_playbooks/full_process_2.1.x/build_container.yml'
+          }
+        }
+    }
+}

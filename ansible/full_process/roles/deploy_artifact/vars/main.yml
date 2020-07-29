@@ -1,0 +1,12 @@
+# Maven Repo Info
+repository_url:      http://10.0.1.11:8081/repository/maven_repo/
+repository_user:     deployer
+repository_password: deployer
+
+# Artifact Info
+group_id:            "skoriy88"
+artifact_id:         "example.smallest"
+artifact_version:    "{{ build_number }}"
+artifact_extension:  "war"
+artifact_filename:   "${artifact_filename}"
+artifact_dest:       /opt/test_web_app/deployed_app.war
