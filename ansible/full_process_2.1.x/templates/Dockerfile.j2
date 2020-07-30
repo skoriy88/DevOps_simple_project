@@ -1,5 +1,5 @@
 FROM openjdk:8-jdk-alpine
 WORKDIR /my_app
-ARG APP_FILE=*.{{ pom_artifact_extension }}
-COPY ${APP_FILE} app.{{ pom_artifact_extension }}
-ENTRYPOINT ["nohup", "java", "-jar", "app.{{ pom_artifact_extension }}", "--server.port=9999"]
+ARG APP_FILE=*.jar
+COPY ${APP_FILE} app.jar
+ENTRYPOINT ["nohup", "java", "-jar", "app.jar", "--server.port=9999"]

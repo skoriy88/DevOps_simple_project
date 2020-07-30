@@ -1,5 +1,5 @@
 # Maven Repo Info
-repository_url:      http://10.0.1.11:8081/repository/maven_repo/
+repository_url:      http://10.0.1.11:8081/repository/spring_boot/
 repository_user:     deployer
 repository_password: deployer
 
