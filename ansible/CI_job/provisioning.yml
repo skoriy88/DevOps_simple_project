@@ -1,0 +1,10 @@
+---
+- name: Creating user, installing java
+  hosts: CI
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+
+  roles:
+    - provisioning

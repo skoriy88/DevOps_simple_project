@@ -1,0 +1,11 @@
+# Maven Repo Info
+repository_url:      http://10.0.1.11:8081/repository/QA_job_repo
+repository_user:     deployer
+repository_password: deployer
+
+# Artifact Info
+group_id:            "QA_job"
+artifact_id:         "QA_job_artifact"
+artifact_version:    latest
+artifact_extension:  "jar"
+artifact_dest:       /opt/test_web_app/deployed_app.jar

@@ -1,0 +1,44 @@
+---
+# Creating remote user
+- name: Create new user group
+  group:
+    name: ansible
+    state: present
+
+- name: Add new user
+  user:
+    name: ansible
+    password: ansible
+    comment: New User created by ansible playbook
+    groups: sudo, ansible
+
+# Installing java
+- name: Update repository
+  apt:
+    update_cache: yes
+
+- name: Installing java
+  apt:
+    name: "{{ JAVA_PACKAGES }}"
+    state: present
+
+# Installing python libraries
+- name: Install python-lxml module
+  apt:
+    name: python-lxml
+    state: present
+
+- name: Install python-lxml module
+  apt:
+    name: python3-lxml
+    state: present
+
+# Creating working dir
+- name: Create a directory if it does not exist
+  file:
+    path: /opt/test_web_app
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+

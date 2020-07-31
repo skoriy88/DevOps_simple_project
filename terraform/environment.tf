@@ -200,6 +200,10 @@ resource "aws_instance" "DevTools" {
   vpc_security_group_ids = [aws_security_group.devtools_sg.id, aws_security_group.icmp_sg.id]
   subnet_id = aws_subnet.gw_public_subnet.id
   private_ip = "10.0.1.10"
+  root_block_device {
+    volume_size = 25
+  }
+  
   tags = {
     Name = "DevTools"
   }
@@ -269,6 +273,9 @@ resource "aws_instance" "Nexus" {
   vpc_security_group_ids = [aws_security_group.artifactory_sg.id, aws_security_group.icmp_sg.id]
   subnet_id = aws_subnet.gw_public_subnet.id
   private_ip = "10.0.1.11"
+  root_block_device {
+    volume_size = 25
+  }
   tags = {
     Name = "Nexus"
   }
@@ -288,9 +295,9 @@ resource "aws_instance" "Nexus" {
       "sudo apt-get install --yes python-lxml",
       "echo --------------INSTALLING NEXUS-------------",
       "cd ~",
-      "wget https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.24.0-02-unix.tar.gz",
-      "sudo tar -C /opt -zxvf nexus-3.24.0-02-unix.tar.gz",
-      "sudo mv /opt/nexus-3.24.0-02 /opt/nexus",
+      "wget https://sonatype-download.global.ssl.fastly.net/repository/downloads-prod-group/3/nexus-3.25.1-02-unix.tar.gz",
+      "sudo tar -C /opt -zxvf nexus-3.25.1-02-unix.tar.gz",
+      "sudo mv /opt/nexus-3.25.1-02-unix.tar.gz /opt/nexus",
       "sudo mv /opt/nexus/bin/nexus.rc /opt/nexus/bin/nexus.rc.old",
       "sudo chown -R ubuntu:ubuntu /opt/nexus/ /opt/sonatype-work/",
       "echo NEXUS_HOME='/opt/nexus' >> ~/.bashrc",

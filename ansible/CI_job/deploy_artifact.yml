@@ -1,0 +1,10 @@
+---
+- name: deploying artifact from nexus to work enwironment and start app
+  hosts: CI
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+
+  roles:
+    - deploy_artifact
