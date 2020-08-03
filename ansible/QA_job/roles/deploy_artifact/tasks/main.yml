@@ -1,14 +1,16 @@
 ---
-- name:                 Download artifact from Nexus
-  maven_artifact:
-    repository_url:     "{{ repository_url }}"
-    username:           "{{ repository_user }}"
-    password:           "{{ repository_password }}"
-    group_id:           "{{ group_id }}"
-    artifact_id:        "{{ artifact_id }}"
-    version:            "{{ artifact_version }}"
-    extension:          "{{ artifact_extension }}"
-    dest:               "{{ artifact_dest }}"
+- name:                Deploy chosen artifakt to QA-env
+  get_url:
+    force: yes
+    url: "{{ artifact_url }}"
+    dest: "{{ artifact_dest }}"
+    username: "{{ repository_user }}"
+    password: "{{ repository_password }}"
+
+- name:                 Kill process on port 8888
+  ignore_errors: yes
+  shell:
+    kill -9 $(lsof -t -i:8888)
 
 - name:                 Run downloaded artifact on CI environment
   shell:
