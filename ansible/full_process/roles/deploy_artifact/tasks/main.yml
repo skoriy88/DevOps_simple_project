@@ -10,6 +10,11 @@
     extension:          "{{ pom_artifact_extension }}" #"{{ artifact_extension }}"
     dest:               "{{ artifact_dest }}"
 
+- name:                 Kill process on port 8888
+  ignore_errors: yes
+  shell:
+    kill -9 $(lsof -t -i:8888)
+
 - name:                 Run downloaded artifact on CI environment
   shell:
     nohup java -jar "{{ artifact_dest }}" --server.port=8888 &
